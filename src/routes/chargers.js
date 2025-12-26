@@ -7,7 +7,6 @@ const { getChargers, startCharging } = require('../services/chargersService');
 router.get('/', async (req, res) => {
     try {
         const chargers = await getChargers();
-        console.log(chargers)
         res.json(chargers);
     } catch (err) {
         console.error('Error fetching chargers:', err.message);

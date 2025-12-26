@@ -15,7 +15,7 @@ const CHARGERS_QUERY = `
       state
       coordinates
     }
-    Connectors {
+    Connectors(where: { connectorId: { _neq: 0 } }) {
       id
       connectorId
       status
@@ -27,18 +27,8 @@ const CHARGERS_QUERY = `
 
 async function getChargers() {
   const data = await hasuraQuery(CHARGERS_QUERY);
-  console.log(data)
   return data;
 }
 
-// ovo će na kraju verovatno ići ka CitrineOS-u / tvojoj backend logici
-async function startCharging(connectorId) {
-  console.log('Start charging on connector', connectorId);
 
-  // ovde ubaciš pravi poziv:
-  // npr. REST ka svom backendu ili GraphQL mutation ka Hasuri
-  // za sada mock:
-  return { success: true, connectorId };
-}
-
-module.exports = { getChargers, startCharging };
+module.exports = { getChargers };

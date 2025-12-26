@@ -1,16 +1,54 @@
 // src/routes/transactions.js
 const express = require('express');
 const router = express.Router();
-const { getTransactions, stopTransaction } = require('../services/transactionsService');
+const { getTransactions } = require('../services/transactionsService');
+
+
+/**
+ * Računa vreme punjenja u minutima.
+ * Svaki započeti minut se računa kao ceo (ceil).
+ *
+ * @param {string|Date|null} startTimestamp
+ * @param {string|Date|null} stopTimestamp
+ * @returns {number|null} vreme u minutima ili null ako nema podataka
+ */
+function calculateTimeSpentCharging(startTimestamp, stopTimestamp) {
+    if (!startTimestamp || !stopTimestamp) {
+        return null;
+    }
+
+    const start = new Date(startTimestamp);
+    const stop = new Date(stopTimestamp);
+
+    const diffMs = stop.getTime() - start.getTime();
+
+    if (diffMs <= 0) {
+        return 0;
+    }
+
+    const diffMinutes = diffMs / (1000 * 60);
+
+    return Math.ceil(diffMinutes);
+}
+
 
 function mapTransaction(row) {
+
+    const startTimestamp = row.StartTransaction?.timestamp ?? null;
+    const stopTimestamp = row.StopTransaction?.timestamp ?? null;
+
     return {
         // Osnovno o transakciji
         id: row.id,
         transactionId: row.transactionId,
         isActive: row.isActive,
         chargingState: row.chargingState,
-        timeSpentCharging: row.timeSpentCharging,
+
+        timeSpentCharging: calculateTimeSpentCharging(
+            startTimestamp,
+            stopTimestamp
+        ),
+
         totalKwh: row.totalKwh,
         stoppedReason: row.stoppedReason,
         totalCost: row.totalCost,
@@ -27,8 +65,12 @@ function mapTransaction(row) {
 
         // StartTransaction
         startTransactionId: row.StartTransaction?.id ?? null,
-        startTimestamp: row.StartTransaction?.timestamp ?? null,
+        startTimestamp,
         meterStart: row.StartTransaction?.meterStart ?? null,
+
+        // StopTransaction
+        stopTransactionId: row.StopTransaction?.id ?? null,
+        stopTimestamp,
 
         // Connector
         connectorId: row.StartTransaction?.Connector?.connectorId ?? null,
@@ -50,7 +92,7 @@ router.get('/', async (req, res) => {
         }
 
         const transactions = rows.map(mapTransaction);
-        console.log(transactions)
+
         return res.status(200).json({ transactions });
     } catch (err) {
         console.error('Error fetching transactions:', err.message);
@@ -58,18 +100,5 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /api/transactions/:transactionId/stop
-router.post('/:transactionId/stop', async (req, res) => {
-    const { transactionId } = req.params;
-    const { identifier } = req.body;
-
-    try {
-        const result = await stopTransaction(transactionId, identifier);
-        res.json(result);
-    } catch (err) {
-        console.error('Error stopping transaction:', err.message);
-        res.status(500).json({ error: 'Failed to stop transaction' });
-    }
-});
 
 module.exports = router;

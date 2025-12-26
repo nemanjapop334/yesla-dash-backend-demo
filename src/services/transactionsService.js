@@ -36,6 +36,11 @@ const TRANSACTIONS_QUERY = `
       }
     }
 
+    StopTransaction {
+      id
+      timestamp
+    }
+      
     ChargingStation {
       id
       locationId
@@ -51,41 +56,8 @@ const TRANSACTIONS_QUERY = `
 
 async function getTransactions() {
   const data = await hasuraQuery(TRANSACTIONS_QUERY);
-  // console.log(data.Transactions)
   return data.Transactions;
 }
 
 
-async function stopTransaction({ transactionId, identifier, timeoutMs = 10000 }) {
-  if (!CITRINE_URL) {
-    throw new Error('CITRINE_URL is not set');
-  }
-  if (!transactionId) {
-    throw new Error('remoteStopTransaction: transactionId is required');
-  }
-  if (!identifier) {
-    throw new Error('remoteStopTransaction: identifier is required');
-  }
-  if (tenantId == null) {
-    throw new Error('remoteStopTransaction: tenantId is required');
-  }
-
-  const url = `${CITRINE_URL}/ocpp/1.6/evdriver/remoteStopTransaction`;
-
-  try {
-    const resp = await axios.post(
-      url,
-      { transactionId },
-      { params: { identifier, tenantId }, timeout: timeoutMs }
-    );
-
-    return { ok: true, status: resp.status, data: resp.data };
-  } catch (err) {
-
-    throw err;
-  }
-}
-
-
-
-module.exports = { getTransactions, stopTransaction };
+module.exports = { getTransactions };

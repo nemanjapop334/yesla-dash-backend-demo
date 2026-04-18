@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const chargersRouter = require('./src/routes/chargers');
 const transactionsRouter = require('./src/routes/transactions');
+const usersRouter = require('./src/routes/users');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/chargers', chargersRouter);
 app.use('/api/transactions', transactionsRouter);
+app.use('/api/users', usersRouter);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
